@@ -1,0 +1,39 @@
+{
+  "name": "food-order-manager",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx src/server/index.ts",
+    "dev:client": "vite --host 127.0.0.1",
+    "build": "tsc --noEmit && vite build",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "start": "node dist/server/index.js"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "^5.0.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "zod": "^4.0.17"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.4",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.3",
+    "@types/node": "^24.2.1",
+    "@types/react": "^19.1.9",
+    "@types/react-dom": "^19.1.7",
+    "@types/supertest": "^6.0.3",
+    "jsdom": "^26.1.0",
+    "supertest": "^7.1.4",
+    "tsx": "^4.20.3",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.1",
+    "vitest": "^3.2.4"
+  }
+}

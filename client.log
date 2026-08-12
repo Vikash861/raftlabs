@@ -1,0 +1,11 @@
+
+> food-order-manager@1.0.0 dev:client
+> vite --host 127.0.0.1
+
+
+  [32m[1mVITE[22m v7.3.6[39m  [2mready in [0m[1m2467[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://127.0.0.1:[1m5173[22m/[39m
+[2m11:24:04 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/client/App.tsx[22m
+[2m11:24:08 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2msrc/client/main.tsx[22m
+[2m11:24:10 pm[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/client/styles.css[22m
