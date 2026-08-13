@@ -3,9 +3,11 @@ import express from "express";
 import { ZodError } from "zod";
 import { menuItems } from "./menu";
 import { OrderStore, updateStatusSchema } from "./orderStore";
+import type { Order } from "../shared/types";
 
 type AppOptions = {
   store?: OrderStore;
+  onOrderUpdated?: (order: Order) => void;
 };
 
 export function createApp(options: AppOptions = {}) {
@@ -56,6 +58,7 @@ export function createApp(options: AppOptions = {}) {
         return;
       }
 
+      options.onOrderUpdated?.(order);
       res.json(order);
     } catch (error) {
       handleRequestError(error, res);

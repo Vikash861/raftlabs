@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
@@ -28,12 +28,23 @@ const order: Order = {
   updatedAt: "2026-08-12T10:00:00.000Z"
 };
 
+const activeOrderKey = "food-order-manager:active-order-id";
+
 describe("App", () => {
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
+    window.localStorage.clear();
   });
 
   it("lets a user add items and place an order", async () => {
+    const webSocketClose = vi.fn();
+    const webSocketAddEventListener = vi.fn();
+    const webSocketMock = vi.fn(() => ({
+      addEventListener: webSocketAddEventListener,
+      close: webSocketClose
+    }));
+
     const fetchMock = vi.fn(async (url: RequestInfo | URL, options?: RequestInit) => {
       if (String(url) === "/api/menu") {
         return jsonResponse(menu);
@@ -47,6 +58,7 @@ describe("App", () => {
     });
 
     vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal("WebSocket", webSocketMock);
 
     render(<App />);
 
@@ -83,6 +95,51 @@ describe("App", () => {
     expect(await screen.findByText("Order status")).toBeInTheDocument();
     expect(screen.getByText("Order #order-12")).toBeInTheDocument();
     expect(screen.getByText("Order Received")).toBeInTheDocument();
+    expect(fetchMock.mock.calls.map(([url]) => String(url))).not.toContain("/api/orders/order-12345678");
+    expect(webSocketMock).toHaveBeenCalledWith("ws://localhost:3000/ws/orders/order-12345678");
+    expect(window.localStorage.getItem(activeOrderKey)).toBe(order.id);
+  });
+
+  it("restores the latest customer order after refresh", async () => {
+    let messageListener: ((event: MessageEvent) => void) | undefined;
+    const webSocketMock = vi.fn(() => ({
+      addEventListener: vi.fn((eventName: string, listener: (event: MessageEvent) => void) => {
+        if (eventName === "message") {
+          messageListener = listener;
+        }
+      }),
+      close: vi.fn()
+    }));
+    const fetchMock = vi.fn(async (url: RequestInfo | URL) => {
+      if (String(url) === "/api/menu") {
+        return jsonResponse(menu);
+      }
+
+      if (String(url) === "/api/orders/order-12345678") {
+        return jsonResponse(order);
+      }
+
+      return jsonResponse({ message: "Not found" }, 404);
+    });
+
+    window.localStorage.setItem(activeOrderKey, order.id);
+    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal("WebSocket", webSocketMock);
+
+    render(<App />);
+
+    expect(await screen.findByText("Order #order-12")).toBeInTheDocument();
+    expect(webSocketMock).toHaveBeenCalledWith("ws://localhost:3000/ws/orders/order-12345678");
+
+    act(() => {
+      messageListener?.({
+        data: JSON.stringify({ type: "order.updated", order: { ...order, status: "Preparing" } })
+      } as MessageEvent);
+    });
+
+    await waitFor(() => {
+      expect(document.querySelectorAll(".timeline li.active")).toHaveLength(2);
+    });
   });
 });
 

@@ -12,11 +12,13 @@
     "start": "node dist/server/index.js"
   },
   "dependencies": {
+    "@types/ws": "^8.18.1",
     "@vitejs/plugin-react": "^5.0.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "ws": "^8.21.3",
     "zod": "^4.0.17"
   },
   "devDependencies": {

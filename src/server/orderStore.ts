@@ -46,7 +46,7 @@ export class OrderStore {
   private readonly statusDelayMs: number;
 
   constructor(options: StoreOptions = {}) {
-    this.autoAdvance = options.autoAdvance ?? true;
+    this.autoAdvance = options.autoAdvance ?? false;
     this.statusDelayMs = options.statusDelayMs ?? 5000;
   }
 
@@ -135,6 +135,7 @@ export class OrderStore {
       setTimeout(() => {
         const order = this.orders.get(id);
         if (!order || order.status === "Cancelled") return;
+        if (statusRank(status) <= statusRank(order.status)) return;
         this.updateStatus(id, status);
       }, this.statusDelayMs * (index + 1))
     );
@@ -151,4 +152,8 @@ export class OrderStore {
 
 function money(value: number) {
   return Math.round(value * 100) / 100;
+}
+
+function statusRank(status: OrderStatus) {
+  return orderStatuses.indexOf(status);
 }

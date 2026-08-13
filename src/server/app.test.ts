@@ -1,5 +1,5 @@
 import request from "supertest";
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createApp } from "./app";
 import { menuItems } from "./menu";
 import { OrderStore } from "./orderStore";
@@ -10,6 +10,10 @@ describe("order API", () => {
 
   beforeEach(() => {
     store.clear();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("returns the menu", async () => {
@@ -90,5 +94,26 @@ describe("order API", () => {
       .expect(400);
 
     expect(response.body.message).toContain("Menu item not found");
+  });
+
+  it("does not let scheduled updates overwrite newer admin status changes", async () => {
+    vi.useFakeTimers();
+    const liveStore = new OrderStore({ autoAdvance: true, statusDelayMs: 1000 });
+
+    const order = liveStore.create({
+      items: [{ menuItemId: "classic-burger", quantity: 1 }],
+      delivery: {
+        name: "Khush",
+        address: "221B Baker Street",
+        phone: "+1 555 123 4567"
+      }
+    });
+
+    liveStore.updateStatus(order.id, "Out for Delivery");
+    vi.advanceTimersByTime(1000);
+
+    expect(liveStore.find(order.id)?.status).toBe("Out for Delivery");
+
+    liveStore.clear();
   });
 });

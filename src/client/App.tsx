@@ -1,15 +1,23 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import { createOrder, getMenu, getOrder } from "./api";
+import { createOrder, getMenu, getOrder, subscribeToOrder } from "./api";
 import type { CartItem, DeliveryDetails, MenuItem, Order, OrderStatus } from "../shared/types";
 import "./styles.css";
 
-const statuses: OrderStatus[] = ["Order Received", "Preparing", "Out for Delivery", "Delivered"];
+const statuses: OrderStatus[] = [
+  "Order Received",
+  "Preparing",
+  "Out for Delivery",
+  "Delivered",
+  "Cancelled"
+];
 
 const emptyDelivery: DeliveryDetails = {
   name: "",
   address: "",
   phone: ""
 };
+
+const activeOrderKey = "food-order-manager:active-order-id";
 
 export default function App() {
   const [menu, setMenu] = useState<MenuItem[]>([]);
@@ -28,16 +36,19 @@ export default function App() {
   }, []);
 
   useEffect(() => {
-    if (!order || order.status === "Delivered" || order.status === "Cancelled") return;
+    const activeOrderId = window.localStorage.getItem(activeOrderKey);
+    if (!activeOrderId) return;
 
-    const timer = window.setInterval(() => {
-      getOrder(order.id)
-        .then(setOrder)
-        .catch((err) => setError(err.message));
-    }, 2000);
+    getOrder(activeOrderId)
+      .then(setOrder)
+      .catch(() => window.localStorage.removeItem(activeOrderKey));
+  }, []);
 
-    return () => window.clearInterval(timer);
-  }, [order]);
+  useEffect(() => {
+    if (!order) return;
+
+    return subscribeToOrder(order.id, setOrder);
+  }, [order?.id]);
 
   const subtotal = useMemo(
     () => cart.reduce((sum, cartItem) => sum + cartItem.item.price * cartItem.quantity, 0),
@@ -85,6 +96,7 @@ export default function App() {
       });
 
       setOrder(nextOrder);
+      window.localStorage.setItem(activeOrderKey, nextOrder.id);
       setCart([]);
       setDelivery(emptyDelivery);
     } catch (err) {

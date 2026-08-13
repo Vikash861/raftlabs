@@ -43,3 +43,17 @@ export function updateOrderStatus(id: string, status: OrderStatus) {
     body: JSON.stringify({ status })
   });
 }
+
+export function subscribeToOrder(id: string, onOrder: (order: Order) => void) {
+  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+  const socket = new WebSocket(`${protocol}//${window.location.host}/ws/orders/${id}`);
+
+  socket.addEventListener("message", (event) => {
+    const message = JSON.parse(event.data) as { type: string; order?: Order };
+    if (message.type === "order.updated" && message.order) {
+      onOrder(message.order);
+    }
+  });
+
+  return () => socket.close();
+}
