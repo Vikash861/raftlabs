@@ -1,23 +1,15 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { createOrder, getMenu, getOrder, subscribeToOrder } from "./api";
-import type { CartItem, DeliveryDetails, MenuItem, Order, OrderStatus } from "../shared/types";
+import { activeOrderKey, saveOrderId } from "./orderStorage";
+import { OrderTimeline } from "./OrderTimeline";
+import type { CartItem, DeliveryDetails, MenuItem, Order } from "../shared/types";
 import "./styles.css";
-
-const statuses: OrderStatus[] = [
-  "Order Received",
-  "Preparing",
-  "Out for Delivery",
-  "Delivered",
-  "Cancelled"
-];
 
 const emptyDelivery: DeliveryDetails = {
   name: "",
   address: "",
   phone: ""
 };
-
-const activeOrderKey = "food-order-manager:active-order-id";
 
 export default function App() {
   const [menu, setMenu] = useState<MenuItem[]>([]);
@@ -96,7 +88,7 @@ export default function App() {
       });
 
       setOrder(nextOrder);
-      window.localStorage.setItem(activeOrderKey, nextOrder.id);
+      saveOrderId(nextOrder.id);
       setCart([]);
       setDelivery(emptyDelivery);
     } catch (err) {
@@ -113,9 +105,19 @@ export default function App() {
           <p className="eyebrow">Order Management</p>
           <h1>Fresh food, tracked from cart to door.</h1>
         </div>
-        <div className="summary-pill">
-          <span>{cart.length}</span>
-          <small>cart items</small>
+        <div className="top-actions">
+          <nav className="page-links" aria-label="Customer navigation">
+            <a className="text-link" href="/orders">
+              My orders
+            </a>
+            <a className="text-link" href="/admin">
+              Admin
+            </a>
+          </nav>
+          <div className="summary-pill">
+            <span>{cart.length}</span>
+            <small>cart items</small>
+          </div>
         </div>
       </section>
 
@@ -250,8 +252,6 @@ export default function App() {
 }
 
 function OrderStatusCard({ order }: { order: Order }) {
-  const activeIndex = Math.max(0, statuses.indexOf(order.status));
-
   return (
     <section className="status-card" aria-label="Order status">
       <div className="section-heading compact">
@@ -259,14 +259,7 @@ function OrderStatusCard({ order }: { order: Order }) {
         <p>Order #{order.id.slice(0, 8)}</p>
       </div>
 
-      <ol className="timeline">
-        {statuses.map((status, index) => (
-          <li className={index <= activeIndex ? "active" : ""} key={status}>
-            <span />
-            {status}
-          </li>
-        ))}
-      </ol>
+      <OrderTimeline order={order} />
     </section>
   );
 }

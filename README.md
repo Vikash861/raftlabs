@@ -1,14 +1,16 @@
 # Food Order Manager
 
-A small TypeScript full-stack assignment for a food delivery order flow. It has a Vite React frontend, an Express REST API, in-memory menu and order storage, validation, tests, and simulated order status updates.
+A small TypeScript full-stack assignment for a food delivery order flow. It has a Vite React frontend, an Express REST API, in-memory menu and order storage, validation, tests, and WebSocket-based order status updates.
 
 ## Features
 
 - Menu display with item images, descriptions, and prices
 - Cart with quantity controls
 - Checkout form for name, address, and phone
+- Customer order history page at `/orders`
+- Admin order management page at `/admin`
 - Order creation, listing, lookup, status update, and delete endpoints
-- Simulated order progress from `Order Received` to `Delivered`
+- Live order status updates through WebSocket subscriptions
 - API and UI tests with Vitest
 
 ## Run Locally
@@ -31,7 +33,25 @@ Start the frontend in a second terminal:
 npm run dev:client
 ```
 
-The app runs at `http://127.0.0.1:5173` and proxies API calls to `http://127.0.0.1:4000`.
+The customer app runs at `http://127.0.0.1:5173`.
+
+Useful pages:
+
+- Customer menu: `http://127.0.0.1:5173`
+- Customer orders: `http://127.0.0.1:5173/orders`
+- Admin orders: `http://127.0.0.1:5173/admin`
+
+Vite proxies API calls and WebSocket upgrades to the backend at `http://127.0.0.1:4000`.
+
+## Real-Time Updates
+
+When a customer places an order, the order ID is saved in browser `localStorage`. The customer order page reads those saved IDs, loads the matching orders with `GET /api/orders/:id`, and opens a WebSocket connection to:
+
+```text
+/ws/orders/:id
+```
+
+When the admin updates an order with `PATCH /api/orders/:id/status`, the backend broadcasts an `order.updated` message to connected clients for that order. The customer UI receives the message and updates the status timeline without refreshing the page.
 
 ## Tests
 
@@ -47,3 +67,7 @@ npm test
 - `GET /api/orders/:id`
 - `PATCH /api/orders/:id/status`
 - `DELETE /api/orders/:id`
+
+## WebSocket
+
+- `WS /ws/orders/:id`
