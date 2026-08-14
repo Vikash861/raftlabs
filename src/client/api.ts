@@ -1,7 +1,10 @@
 import type { CreateOrderInput, MenuItem, Order, OrderStatus } from "../shared/types";
 
+const apiBaseUrl = import.meta.env.VITE_API_URL ?? "";
+const webSocketBaseUrl = import.meta.env.VITE_WS_URL;
+
 async function request<T>(url: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(url, {
+  const response = await fetch(`${apiBaseUrl}${url}`, {
     headers: {
       "Content-Type": "application/json",
       ...options?.headers
@@ -46,7 +49,8 @@ export function updateOrderStatus(id: string, status: OrderStatus) {
 
 export function subscribeToOrder(id: string, onOrder: (order: Order) => void) {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  const socket = new WebSocket(`${protocol}//${window.location.host}/ws/orders/${id}`);
+  const baseUrl = webSocketBaseUrl ?? `${protocol}//${window.location.host}`;
+  const socket = new WebSocket(`${baseUrl}/ws/orders/${id}`);
 
   socket.addEventListener("message", (event) => {
     const message = JSON.parse(event.data) as { type: string; order?: Order };

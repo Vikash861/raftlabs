@@ -21,6 +21,13 @@ Install dependencies:
 npm install
 ```
 
+Optional: create a `.env` file if your frontend is not using the Vite proxy:
+
+```bash
+VITE_API_URL=http://127.0.0.1:4000
+VITE_WS_URL=ws://127.0.0.1:4000
+```
+
 Start the API:
 
 ```bash
@@ -42,6 +49,42 @@ Useful pages:
 - Admin orders: `http://127.0.0.1:5173/admin`
 
 Vite proxies API calls and WebSocket upgrades to the backend at `http://127.0.0.1:4000`.
+
+## Deployment
+
+The easiest deployment is to host the backend and frontend separately:
+
+1. Deploy the backend API on Render, Railway, or another Node host.
+2. Deploy the Vite frontend on Vercel or Netlify.
+3. Add frontend environment variables that point to the hosted backend.
+
+Backend service settings:
+
+```bash
+Build Command: npm install
+Start Command: npm start
+```
+
+The backend reads the port from `PORT`, which Render/Railway set automatically.
+
+Frontend service settings:
+
+```bash
+Build Command: npm run build
+Publish Directory: dist
+```
+
+For Vercel, the included `vercel.json` rewrites `/orders` and `/admin` back to `index.html`.
+For Netlify, the included `public/_redirects` file does the same after Vite copies it to `dist`.
+
+Frontend environment variables:
+
+```bash
+VITE_API_URL=https://your-backend-url.onrender.com
+VITE_WS_URL=wss://your-backend-url.onrender.com
+```
+
+Use `https` for API calls and `wss` for WebSocket calls in production.
 
 ## Real-Time Updates
 
